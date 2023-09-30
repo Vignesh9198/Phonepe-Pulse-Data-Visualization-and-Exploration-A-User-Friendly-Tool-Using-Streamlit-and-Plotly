@@ -1,0 +1,227 @@
+import streamlit as st
+import pandas as pd
+import sqlite3
+import json
+import os
+
+# Define the path to your data
+path = "/content/pulse/data/aggregated/transaction/country/india/state/"
+
+# (1) Load transaction data
+clime = {'state': [], 'year': [], 'quarter': [], 'transaction_type': [],
+         'transaction_count': [], 'transaction_amount': []}
+
+for i in os.listdir(path):
+    p_i = os.path.join(path, i)
+    for j in os.listdir(p_i):
+        p_j = os.path.join(p_i, j)
+        for k in os.listdir(p_j):
+            p_k = os.path.join(p_j, k)
+            with open(p_k, 'r') as data_file:
+                d = json.load(data_file)
+
+            for z in d['data']['transactionData']:
+                name = z['name']
+                count = z['paymentInstruments'][0]['count']
+                amount = z['paymentInstruments'][0]['amount']
+                clime['transaction_type'].append(name)
+                clime['transaction_count'].append(count)
+                clime['transaction_amount'].append(amount)
+                clime['state'].append(i)
+                clime['year'].append(j)
+                clime['quarter'].append(int(k.strip('.json')))
+
+Ag_state_df = pd.DataFrame(clime)
+
+# (2) Load aggregated user data
+path_2 = "/content/pulse/data/aggregated/user/country/india/state/"
+
+Agg_user = {'state': [], 'year': [], 'quarter': [], 'brand': [],
+            'user_count': [], 'user_percentage': []}
+
+for i in os.listdir(path_2):
+    p_i = os.path.join(path_2, i)
+    for j in os.listdir(p_i):
+        p_j = os.path.join(p_i, j)
+        for k in os.listdir(p_j):
+            p_k = os.path.join(p_j, k)
+            with open(p_k, 'r') as data_file:
+                B = json.load(data_file)
+
+            try:
+                for l in B["data"]["usersByDevice"]:
+                    brand_name = l["brand"]
+                    count_ = l["count"]
+                    all_percentage = l["percentage"]
+                    Agg_user["state"].append(i)
+                    Agg_user["year"].append(j)
+                    Agg_user["quarter"].append(int(k.strip('.json')))
+                    Agg_user["brand"].append(brand_name)
+                    Agg_user["user_count"].append(count_)
+                    Agg_user["user_percentage"].append(all_percentage * 100)
+            except:
+                pass
+
+df_aggregated_user = pd.DataFrame(Agg_user)
+
+# (3) Load map transaction data
+path_3 = "/content/pulse/data/map/transaction/hover/country/india/state/"
+map_tra = {'state': [], 'year': [], 'quarter': [], 'district': [],
+           'transaction_count': [], 'transaction_amount': []}
+
+for i in os.listdir(path_3):
+    p_i = os.path.join(path_3, i)
+    for j in os.listdir(p_i):
+        p_j = os.path.join(p_i, j)
+        for k in os.listdir(p_j):
+            p_k = os.path.join(p_j, k)
+            with open(p_k, 'r') as data_file:
+                C = json.load(data_file)
+
+            for l in C["data"]["hoverDataList"]:
+                district = l["name"]
+                count = l["metric"][0]["count"]
+                amount = l["metric"][0]["amount"]
+                map_tra['state'].append(i)
+                map_tra['year'].append(j)
+                map_tra['quarter'].append(int(k.strip('.json')))
+                map_tra["district"].append(district)
+                map_tra["transaction_count"].append(count)
+                map_tra["transaction_amount"].append(amount)
+
+df_map_transaction = pd.DataFrame(map_tra)
+
+# (4) Load map user data
+path_4 = "/content/pulse/data/map/user/hover/country/india/state/"
+map_user = {"state": [], "year": [], "quarter": [], "district": [], "registered_user": []}
+
+for i in os.listdir(path_4):
+    p_i = os.path.join(path_4, i)
+    for j in os.listdir(p_i):
+        p_j = os.path.join(p_i, j)
+        for k in os.listdir(p_j):
+            p_k = os.path.join(p_j, k)
+            with open(p_k, 'r') as data_file:
+                D = json.load(data_file)
+
+            for l in D["data"]["hoverData"].items():
+                district = l[0]
+                registered_user = l[1]["registeredUsers"]
+                map_user['state'].append(i)
+                map_user['year'].append(j)
+                map_user['quarter'].append(int(k.strip('.json')))
+                map_user["district"].append(district)
+                map_user["registered_user"].append(registered_user)
+
+df_map_user = pd.DataFrame(map_user)
+
+# (5) Load top transaction data
+path_5 = "/content/pulse/data/top/transaction/country/india/state/"
+top_tra = {'state': [], 'year': [], 'quarter': [], 'district_pincode': [],
+           'transaction_count': [], 'transaction_amount': []}
+
+for i in os.listdir(path_5):
+    p_i = os.path.join(path_5, i)
+    for j in os.listdir(p_i):
+        p_j = os.path.join(p_i, j)
+        for k in os.listdir(p_j):
+            p_k = os.path.join(p_j, k)
+            with open(p_k, 'r') as data_file:
+                E = json.load(data_file)
+
+            for l in E['data']['pincodes']:
+                Name = l['entityName']
+                count = l['metric']['count']
+                amount = l['metric']['amount']
+                top_tra['state'].append(i)
+                top_tra['year'].append(j)
+                top_tra['quarter'].append(int(k.strip('.json')))
+                top_tra['district_pincode'].append(Name)
+                top_tra['transaction_count'].append(count)
+                top_tra['transaction_amount'].append(amount)
+
+df_top_transaction = pd.DataFrame(top_tra)
+
+# (6) Load top user data
+path_6 = "/content/pulse/data/top/user/country/india/state/"
+top_user = {'state': [], 'year': [], 'quarter': [], 'district_pincode': [],
+            'registered_user': []}
+
+for i in os.listdir(path_6):
+    p_i = os.path.join(path_6, i)
+    for j in os.listdir(p_i):
+        p_j = os.path.join(p_i, j)
+        for k in os.listdir(p_j):
+            p_k = os.path.join(p_j, k)
+            with open(p_k, 'r') as data_file:
+                F = json.load(data_file)
+
+            for l in F['data']['pincodes']:
+                Name = l['name']
+                registered_user = l['registeredUsers']
+                top_user['state'].append(i)
+                top_user['year'].append(j)
+                top_user['quarter'].append(int(k.strip('.json')))
+                top_user['district
+
+(sqlite3)-------------------------------------------------------------------------------------------------------------------------------------------
+
+sqlite3
+
+conn = sqlite3.connect('your_database_name.db')
+
+# Create tables for each data frame
+df_aggregated_user.to_sql('aggregated_user', conn, if_exists='replace', index=False)
+df_map_transaction.to_sql('map_transaction', conn, if_exists='replace', index=False)
+df_map_user.to_sql('map_user', conn, if_exists='replace', index=False)
+df_top_transaction.to_sql('top_transaction', conn, if_exists='replace', index=False)
+df_top_user.to_sql('top_user', conn, if_exists='replace', index=False)
+df_state_df.to_sql('state_df', conn, if_exists='replace', index=False)
+
+
+conn.commit()
+conn.close()
+
+
+# Connect to your SQLite database
+conn = sqlite3.connect('your_database_name.db')
+
+# Create Streamlit app
+st.title("Database Queries")
+
+# Define functions for queries
+def execute_query(query):
+    cursor = conn.cursor()
+    cursor.execute(query)
+    result = cursor.fetchall()
+    cursor.close()
+    return result
+
+
+(streamlit and quries)--------------------------------------------------------------------------------------------------------------
+
+# Example Queries
+st.header("Example Queries")
+
+# Query 1: Select all rows from the 'aggregated_user' table
+if st.button("Select all from aggregated_user"):
+    query = "SELECT * FROM aggregated_user"
+    result = execute_query(query)
+    st.write(result)
+
+# Query 2: Select specific columns from the 'map_transaction' table
+if st.button("Select columns from map_transaction"):
+    query = "SELECT State, Year, District, Transaction_Count FROM map_transaction"
+    result = execute_query(query)
+    st.write(result)
+
+# Query 3: Filter data based on conditions
+if st.button("Filter top_transaction data"):
+    query = "SELECT * FROM top_transaction WHERE Transaction_count > 100"
+    result = execute_query(query)
+    st.write(result)
+
+# Add more queries as needed
+
+# Close the database connection
+conn.close()
